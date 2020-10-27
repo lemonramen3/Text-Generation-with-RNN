@@ -69,14 +69,21 @@ class RNN(nn.Module):
             for j, cell in enumerate(self.cells):
                 hidden, now_state[j] = cell(hidden, now_state[j]) # shape: (batch_size, num_units)
             logits = self.linear(hidden) # shape: (batch_size, num_vocabs)
-            print(logits)
             logits_per_step.append(logits)
 
         # TODO START
         # calculate loss
 
-        # print(logits_per_step)
-        loss = 0
+        softmax = nn.Softmax(dim=0)
+        loss_per_batch = []
+        for i in range(batch_size):
+            # print(logits_per_step[length[i].item()-2][i])
+            # print(len(logits_per_step))
+            p = softmax(logits_per_step[length[i].item()-2][i])
+            p = - torch.mean(torch.log(p))
+            loss_per_batch.append(p)
+        loss = torch.mean(torch.stack(loss_per_batch, dim=0))
+        # loss = torch.sum()
         # TODO END
 
         return loss, torch.stack(logits_per_step, dim=1)
