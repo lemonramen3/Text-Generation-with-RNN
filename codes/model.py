@@ -102,7 +102,7 @@ class RNN(nn.Module):
 
             # TODO START
             # translate now_token to embedding
-            embedding = 0# shape: (batch_size, num_embed_units)
+            embedding = nn.Embedding.from_pretrained(self.wordvec)(now_token)# shape: (batch_size, num_embed_units)
             # TODO END
 
             hidden = embedding
