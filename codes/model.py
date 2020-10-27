@@ -23,9 +23,10 @@ class RNN(nn.Module):
 
         # TODO START
         # fill the parameter for multi-layer RNN
-        self.cells = nn.Sequential(\
-            RNNCell(),
-            *[RNNCell() for _ in range(num_layers - 1)]
+
+        self.cells = nn.Sequential(
+            RNNCell(num_embed_units, num_units),
+            *[RNNCell(num_units, num_units) for _ in range(num_layers - 1)]
         )
         # TODO END
 
@@ -52,7 +53,9 @@ class RNN(nn.Module):
 
         # TODO START
         # implement embedding layer
-        embedding = # shape: (batch_size, length, num_embed_units)
+
+        embedding = nn.Embedding.from_pretrained(self.wordvec)(sent)  # shape: (batch_size, length, num_embed_units)
+
         # TODO END
 
         now_state = []
@@ -66,11 +69,14 @@ class RNN(nn.Module):
             for j, cell in enumerate(self.cells):
                 hidden, now_state[j] = cell(hidden, now_state[j]) # shape: (batch_size, num_units)
             logits = self.linear(hidden) # shape: (batch_size, num_vocabs)
+            print(logits)
             logits_per_step.append(logits)
 
         # TODO START
         # calculate loss
-        loss = 
+
+        # print(logits_per_step)
+        loss = 0
         # TODO END
 
         return loss, torch.stack(logits_per_step, dim=1)
@@ -89,7 +95,7 @@ class RNN(nn.Module):
 
             # TODO START
             # translate now_token to embedding
-            embedding = # shape: (batch_size, num_embed_units)
+            embedding = 0# shape: (batch_size, num_embed_units)
             # TODO END
 
             hidden = embedding
@@ -103,7 +109,7 @@ class RNN(nn.Module):
             elif decode_strategy == "top-p":
                 # TODO START
                 # implement top-p samplings
-                now_token = # shape: (batch_size)
+                now_token = 0# shape: (batch_size)
                 # TODO END
             else:
                 raise NotImplementedError("unknown decode strategy")

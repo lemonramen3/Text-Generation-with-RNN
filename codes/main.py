@@ -111,7 +111,6 @@ if __name__ == '__main__':
         os.mkdir(args.train_dir)
     dataloader = cotk.dataloader.LanguageGeneration(args.data_dir, tokenizer="space", convert_to_lower_letter=False, min_frequent_vocab_times=0)
     wordvec = cotk.wordvector.GeneralWordVector(args.wordvec_dir)
-
     if not args.test:
         print("Created model with fresh parameters.")
         model = RNN(
