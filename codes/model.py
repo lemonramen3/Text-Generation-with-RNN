@@ -74,9 +74,11 @@ class RNN(nn.Module):
         cross = nn.CrossEntropyLoss()
 
         for i in range(batch_size):
-            p = torch.stack(logits_per_step[:length[i]-2], dim=0)[:, i, :]
+            # print(sent[i])
+            # print(length[i])
+            p = torch.stack(logits_per_step[:length[i]-1], dim=0)[:, i, :]
             # print(p.shape)
-            target = sent[i][:length[i]-2]
+            target = sent[i][1:length[i]]
             # print(target.shape)
             loss += cross(p, target)
         loss /= batch_size
