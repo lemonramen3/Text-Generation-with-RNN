@@ -43,7 +43,6 @@ class RNN(nn.Module):
         #   [2, 7, 8, 1, 1, 3]    # third sentence: <go> hello i <unk> <unk> <eos>
         #   ]
         # You can use self.dataloader.convert_ids_to_sentence(sent[0]) to translate the first sentence to string in this batch.
-
         # Sentence Lengths
         length = torch.tensor(batched_data["sent_length"], dtype=torch.long, device=device) # shape: (batch)
         # An example (corresponding to the above 3 sentences):
@@ -54,8 +53,7 @@ class RNN(nn.Module):
         # TODO START
         # implement embedding layer
 
-        embedding = nn.Embedding.from_pretrained(self.wordvec)(sent)  # shape: (batch_size, length, num_embed_units)
-
+        embedding = self.wordvec[sent]  # shape: (batch_size, length, num_embed_units)
         # TODO END
 
         now_state = []
@@ -73,17 +71,19 @@ class RNN(nn.Module):
 
         # TODO START
         # calculate loss
+        cross = nn.CrossEntropyLoss()
 
-        softmax = nn.Softmax(dim=0)
-        loss_per_batch = []
         for i in range(batch_size):
-            # print(logits_per_step[length[i].item()-2][i])
-            # print(len(logits_per_step))
-            p = softmax(logits_per_step[length[i].item()-2][i])
-            p = - torch.mean(torch.log(p))
-            loss_per_batch.append(p)
-        loss = torch.mean(torch.stack(loss_per_batch, dim=0))
-        # loss = torch.sum()
+            p = torch.stack(logits_per_step[:length[i]-2], dim=0)[:, i, :]
+            # print(p.shape)
+            target = sent[i][:length[i]-2]
+            # print(target.shape)
+            loss += cross(p, target)
+        loss /= batch_size
+
+
+
+
         # TODO END
 
         return loss, torch.stack(logits_per_step, dim=1)
