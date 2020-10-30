@@ -72,20 +72,11 @@ class RNN(nn.Module):
         # TODO START
         # calculate loss
         cross = nn.CrossEntropyLoss()
-
         for i in range(batch_size):
-            # print(sent[i])
-            # print(length[i])
             p = torch.stack(logits_per_step[:length[i]-1], dim=0)[:, i, :]
-            # print(p.shape)
             target = sent[i][1:length[i]]
-            # print(target.shape)
             loss += cross(p, target)
         loss /= batch_size
-
-
-
-
         # TODO END
 
         return loss, torch.stack(logits_per_step, dim=1)
@@ -104,7 +95,7 @@ class RNN(nn.Module):
 
             # TODO START
             # translate now_token to embedding
-            embedding = nn.Embedding.from_pretrained(self.wordvec)(now_token)# shape: (batch_size, num_embed_units)
+            embedding = self.wordvec[now_token] # shape: (batch_size, num_embed_units)
             # TODO END
 
             hidden = embedding
@@ -118,7 +109,19 @@ class RNN(nn.Module):
             elif decode_strategy == "top-p":
                 # TODO START
                 # implement top-p samplings
-                now_token = 0# shape: (batch_size)
+                # print(logits)
+                prob = (logits / temperature).softmax(dim=-1)
+                sorted_prob, sorted_indices = torch.sort(prob, descending=True, dim=1)
+                cumulative_prob = torch.cumsum(sorted_prob, dim=-1)
+                mask = cumulative_prob < max_probability
+                for i in range(batch_size):
+                    mask[i] = torch.index_select(mask[i], dim=0, index=sorted_indices[i])
+
+                prob = torch.where(mask, prob, torch.zeros(prob.shape, device=device))
+
+
+
+                now_token = torch.multinomial(prob, 1)[:, 0] # shape: (batch_size)
                 # TODO END
             else:
                 raise NotImplementedError("unknown decode strategy")

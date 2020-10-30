@@ -37,7 +37,7 @@ parser.add_argument('--wordvec_dir', type=str, default='./wordvec',
     help='Wordvector directory. Default: ../wordvec')
 parser.add_argument('--train_dir', type=str, default='./train',
     help='Training directory for saving model. Default: ./train')
-parser.add_argument('--decode_strategy', type=str, choices=["random", "top-p"], default="random",
+parser.add_argument('--decode_strategy', type=str, choices=["random", "top-p"], default="top-p",
     help='The strategy for decoding. Can be "random" or "top-p". Default: random')
 parser.add_argument('--temperature', type=float, default=1,
     help='The temperature for decoding. Default: 1')
