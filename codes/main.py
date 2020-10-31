@@ -43,6 +43,8 @@ parser.add_argument('--temperature', type=float, default=1,
     help='The temperature for decoding. Default: 1')
 parser.add_argument('--max_probability', type=float, default=1,
     help='The p for top-p decoding. Default: 1')
+parser.add_argument('--cell', type=str, choices=["RNN", "LSTM", "GRU"], default="RNN",
+    help='The type of RNN cells used in the network. Default: RNN')
 args = parser.parse_args()
 
 def fast_evaluate(model, dataloader, datakey, device):
@@ -114,6 +116,7 @@ if __name__ == '__main__':
     if not args.test:
         print("Created model with fresh parameters.")
         model = RNN(
+            args.cell,
             args.embed_units,
             args.units,
             args.layers,

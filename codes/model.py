@@ -2,11 +2,11 @@ import numpy as np
 import torch
 from torch import nn
 import torch.nn.functional as F
-
 from rnn_cell import RNNCell, GRUCell, LSTMCell
 
 class RNN(nn.Module):
     def __init__(self,
+            cell_type,        # RNN cell type
             num_embed_units,  # pretrained wordvec size
             num_units,        # RNN units size
             num_layers,       # number of RNN layers
@@ -23,11 +23,21 @@ class RNN(nn.Module):
 
         # TODO START
         # fill the parameter for multi-layer RNN
-
-        self.cells = nn.Sequential(
-            RNNCell(num_embed_units, num_units),
-            *[RNNCell(num_units, num_units) for _ in range(num_layers - 1)]
-        )
+        if cell_type == 'RNN':
+            self.cells = nn.Sequential(
+                RNNCell(num_embed_units, num_units),
+                *[RNNCell(num_units, num_units) for _ in range(num_layers - 1)]
+            )
+        elif cell_type == 'LSTM':
+            self.cells = nn.Sequential(
+                LSTMCell(num_embed_units, num_units),
+                *[LSTMCell(num_units, num_units) for _ in range(num_layers - 1)]
+            )
+        else:
+            self.cells = nn.Sequential(
+                GRUCell(num_embed_units, num_units),
+                *[GRUCell(num_units, num_units) for _ in range(num_layers - 1)]
+            )
         # TODO END
 
         # intialize other layers
