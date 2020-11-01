@@ -12,6 +12,7 @@ random.seed(1229)
 import cotk
 
 from model import RNN
+from tensorboardX import SummaryWriter
 
 parser = argparse.ArgumentParser()
 
@@ -46,6 +47,7 @@ parser.add_argument('--max_probability', type=float, default=1,
 parser.add_argument('--cell', type=str, choices=["RNN", "LSTM", "GRU"], default="RNN",
     help='The type of RNN cells used in the network. Default: RNN')
 args = parser.parse_args()
+writer = SummaryWriter('log/{}'.format(args.name))
 
 def fast_evaluate(model, dataloader, datakey, device):
     model.eval()
@@ -154,7 +156,9 @@ if __name__ == '__main__':
                     torch.save(model, fout)
 
             samples = show_example(model, dataloader, 5, device)
-
+            writer.add_scalar('train_loss', train_loss, epoch)
+            writer.add_scalar('val_loss', val_loss, epoch)
+            writer.add_scalar('val_ppl', val_ppl, epoch)
             epoch_time = time.time() - start_time
             print("Epoch " + str(epoch) + " of " + str(args.num_epochs) + " took " + str(epoch_time) + "s")
             print("  training loss:                 " + str(train_loss))
@@ -176,9 +180,9 @@ if __name__ == '__main__':
 
         _, ppl = fast_evaluate(model, dataloader, "test", device)
         result = evaluate(model, dataloader, "test", device)
-        with open('output.txt', 'w') as fout:
+        with open('output_{}_{}_{}_{}.txt'.format(args.test, args.decode_strategy, args.max_probability, args.temperature), 'w') as fout:
             for sent in result["gen"]:
                 fout.write(" ".join(sent) + "\n")
 
         print("        test_set, perplexity %.2f, forward BLEU %.3f, backward BLEU %.3f, harmonic BLEU %.3f" % (ppl, result["fw-bleu"], result["bw-bleu"], result["fw-bw-bleu"]))
-        print("        test_set, write inference results to output.txt")
+        print("        test_set, write inference results to output_{}_{}_{}_{}.txt".format(args.test, args.decode_strategy, args.max_probability, args.temperature))

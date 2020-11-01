@@ -95,7 +95,6 @@ class RNN(nn.Module):
         # First Tokens is <go>
         now_token = torch.tensor([self.dataloader.go_id] * batch_size, dtype=torch.long, device=device)
         flag = torch.tensor([1] * batch_size, dtype=torch.float, device=device)
-
         now_state = []
         for cell in self.cells:
             now_state.append(cell.init(batch_size, device))
@@ -118,19 +117,21 @@ class RNN(nn.Module):
                 now_token = torch.multinomial(prob, 1)[:, 0] # shape: (batch_size)
             elif decode_strategy == "top-p":
                 # TODO START
+                # Reference: https://gist.github.com/thomwolf/1a5a29f6962089e871b94cbd09daf317
                 # implement top-p samplings
                 # print(logits)
-                prob = (logits / temperature).softmax(dim=-1)
-                sorted_prob, sorted_indices = torch.sort(prob, descending=True, dim=1)
-                cumulative_prob = torch.cumsum(sorted_prob, dim=-1)
-                mask = cumulative_prob < max_probability
-                for i in range(batch_size):
-                    mask[i] = torch.index_select(mask[i], dim=0, index=sorted_indices[i])
-
-                prob = torch.where(mask, prob, torch.zeros(prob.shape, device=device))
-
-
-
+                logits_ = []
+                for per_logits in logits:
+                    sorted_logits, sorted_indices = torch.sort(per_logits, descending=True)
+                    cumulative_prob = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
+                    sorted_indices_to_remove = cumulative_prob > max_probability
+                    sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
+                    sorted_indices_to_remove[..., 0] = 0
+                    indices_to_remove = sorted_indices[sorted_indices_to_remove]
+                    per_logits[indices_to_remove] = - float('Inf')
+                    logits_.append(per_logits)
+                logits_ = torch.stack(logits_, dim=0)
+                prob = (logits_ / temperature).softmax(dim=-1)
                 now_token = torch.multinomial(prob, 1)[:, 0] # shape: (batch_size)
                 # TODO END
             else:
